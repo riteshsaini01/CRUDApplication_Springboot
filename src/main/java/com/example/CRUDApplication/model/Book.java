@@ -1,9 +1,7 @@
 package com.example.CRUDApplication.model;
 
+import jakarta.persistence.*;
 import lombok.*;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 
 
 @Entity
@@ -15,10 +13,16 @@ import jakarta.persistence.Table;
 @ToString
 public class Book {
 
-    Private Long id;
-    Private String title;
-    Private String author;
-    
+    @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    private Long id;
+
+    @Column
+    private String title;
+
+    @Column
+    private String author;
+
 
 
 }

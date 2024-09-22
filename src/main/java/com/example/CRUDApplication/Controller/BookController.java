@@ -1,75 +1,95 @@
 package com.example.CRUDApplication.Controller;
 
-import org.hibernate.mapping.List;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.example.CRUDApplication.Repo.BookRepo;
 import com.example.CRUDApplication.model.Book;
 
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
 
 @RestController
+@RequestMapping("/api")
 public class BookController {
 
     @Autowired
-    private BookRepo bookRepo;
+    BookRepo bookRepository;
 
-    
-    @GetMapping("/getAllBooks/")
-    public ResponseEntity<List<Book>> getAllBooks (){
-
+    @GetMapping("/getAllBooks")
+    public ResponseEntity<List<Book>> getAllBooks() {
         try {
             List<Book> bookList = new ArrayList<>();
-            bookRepo.findAll().forEach(bookList::add);
+            bookRepository.findAll().forEach(bookList::add);
 
-            if(bookList.isEmpty()){
-                return new ResponseEntity<>(bookList, HttpStatus.NO_CONTENT);
+            if (bookList.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
 
-            return new ResponseEntity<>(HttpStatus.OK);
-            
+            return new ResponseEntity<>(bookList, HttpStatus.OK);
+        } catch(Exception ex) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/getBookById/{id}")
+    public ResponseEntity<Book> getBookById(@PathVariable Long id) {
+        Optional<Book> bookObj = bookRepository.findById(id);
+        if (bookObj.isPresent()) {
+            return new ResponseEntity<>(bookObj.get(), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PostMapping("/addBook")
+    public ResponseEntity<Book> addBook(@RequestBody Book book) {
+        try {
+            Book bookObj = bookRepository.save(book);
+            return new ResponseEntity<>(bookObj, HttpStatus.CREATED);
         } catch (Exception e) {
-           
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
     }
-    
-    @GetMapping("/getBookByID/{id}")
-    public ResponseEntity<Book> getBookById(@PathVariable Long id){
 
-        Optional<Book> bookData = bookRepo.findById(id);
+    @PostMapping("/updateBook/{id}")
+    public ResponseEntity<Book> updateBook(@PathVariable Long id, @RequestBody Book book) {
+        try {
+            Optional<Book> bookData = bookRepository.findById(id);
+            if (bookData.isPresent()) {
+                Book updatedBookData = bookData.get();
+                updatedBookData.setTitle(book.getTitle());
+                updatedBookData.setAuthor(book.getAuthor());
 
-        if(bookData.isPresent()){
-            return new ResponseEntity<>(bookData.get(), HttpStatus.OK);
+                Book bookObj = bookRepository.save(updatedBookData);
+                return new ResponseEntity<>(bookObj, HttpStatus.CREATED);
+            }
+
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-    }
-    
-    @PostMapping
-    public void addBook(){
-
     }
 
-    @PostMapping
-    public void updateBookById(){
-
+    @DeleteMapping("/deleteBookById/{id}")
+    public ResponseEntity<HttpStatus> deleteBook(@PathVariable Long id) {
+        try {
+            bookRepository.deleteById(id);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
-
-    @DeleteMapping
-    public void deleteBookById(){
-
+    @DeleteMapping("/deleteAllBooks")
+    public ResponseEntity<HttpStatus> deleteAllBooks() {
+        try {
+            bookRepository.deleteAll();
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
 }
