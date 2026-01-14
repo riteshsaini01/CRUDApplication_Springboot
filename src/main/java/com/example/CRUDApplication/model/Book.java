@@ -12,7 +12,7 @@ import lombok.*;
 @Getter
 @ToString
 public class Book {
-
+//book class
     @Id
     @GeneratedValue(strategy=GenerationType.AUTO)
     private Long id;
